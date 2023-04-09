@@ -58,6 +58,14 @@ def get_random_coordinate(image, size):
     y = random.randint(size // 2, image.height - size // 2 - 1)
     return x, y
 
+def get_square_coords(center_x, center_y, size):
+    half_size = size // 2
+    x1 = center_x - half_size
+    y1 = center_y - half_size
+    x2 = center_x + half_size
+    y2 = center_y + half_size
+    return (x1, y1, x2, y2)
+
 
 def swap_pixels(img, x1, y1, x2, y2, square_size):
     """
@@ -65,19 +73,30 @@ def swap_pixels(img, x1, y1, x2, y2, square_size):
     """
     image_array = np.array(img)
 
-    x1_start, y1_start = max(0, x1 - square_size // 2), max(0, y1 - square_size // 2)
-    x2_start, y2_start = max(0, x2 - square_size // 2), max(0, y2 - square_size // 2)
-    x1_end, y1_end = min(image_array.shape[0]-1, x1_start + square_size), min(image_array.shape[1]-1, y1_start + square_size)
-    x2_end, y2_end = min(image_array.shape[0]-1, x2_start + square_size), min(image_array.shape[1]-1, y2_start + square_size)
-
-
-    # Swap the pixels in the two squares
-    for i in range(x1_start, x1_end):
-        for j in range(y1_start, y1_end):
-            temp = image_array[i, j].copy()
-            image_array[i, j] = image_array[x2_start + i - x1_start, y2_start + j - y1_start].copy()
-            image_array[x2_start + i - x1_start, y2_start + j - y1_start] = temp.copy()
-
+# get the starting and ending coordinates of the squares to be swapped
+    x1_start, y1_start, x1_end, y1_end = get_square_coords(x1, y1, square_size)
+    x2_start, y2_start, x2_end, y2_end = get_square_coords(x2, y2, square_size)
+    
+    # swap the squares of pixels surrounding each center
+    temp = image_array[x1_start:x1_end, y1_start:y1_end].copy()
+    image_array[x1_start:x1_end, y1_start:y1_end] = image_array[x2_start:x2_end, y2_start:y2_end]
+    image_array[x2_start:x2_end, y2_start:y2_end] = temp
+    
+    # add a random flip or rotation
+    flip_or_rotate = random.randint(0, 4)
+    if flip_or_rotate == 0:  # flip horrizontally
+        image_array[x1_start:x1_end, y1_start:y1_end] = np.fliplr(image_array[x1_start:x1_end, y1_start:y1_end])
+        image_array[x2_start:x2_end, y2_start:y2_end] = np.fliplr(image_array[x2_start:x2_end, y2_start:y2_end])
+    if flip_or_rotate == 1:  # flip vertically
+        image_array[x1_start:x1_end, y1_start:y1_end] = np.flipud(image_array[x1_start:x1_end, y1_start:y1_end])
+        image_array[x2_start:x2_end, y2_start:y2_end] = np.flipud(image_array[x2_start:x2_end, y2_start:y2_end])
+    elif flip_or_rotate == 2:  # rotate 90 degrees clockwise
+        image_array[x1_start:x1_end, y1_start:y1_end] = np.rot90(image_array[x1_start:x1_end, y1_start:y1_end], k=-1)
+        image_array[x2_start:x2_end, y2_start:y2_end] = np.rot90(image_array[x2_start:x2_end, y2_start:y2_end], k=-1)
+    elif flip_or_rotate == 3:  # rotate 90 degrees clockwise
+        image_array[x1_start:x1_end, y1_start:y1_end] = np.rot90(image_array[x1_start:x1_end, y1_start:y1_end], k=1)
+        image_array[x2_start:x2_end, y2_start:y2_end] = np.rot90(image_array[x2_start:x2_end, y2_start:y2_end], k=1)
+    
     return Image.fromarray(image_array)
 
 def create_gif(images, duration):
