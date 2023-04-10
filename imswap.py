@@ -2,13 +2,15 @@ from PIL import Image, ImageOps
 import math
 import tqdm
 import random
+import io
+import imageio
 
 def calculate_distance(image, x, y):
     # Get the RGB value of the center pixel
     center_pixel = image.getpixel((x, y))
 
     # Define the neighborhood size (adjust this as needed)
-    neighborhood_size = 3
+    neighborhood_size = 2
 
     # Define the boundaries of the neighborhood
     left = max(0, x - neighborhood_size)
@@ -46,6 +48,7 @@ def can_swap_pixels(image, x1, y1, x2, y2):
     distance2 = calculate_distance(image, x2, y2)
 
     # Swap the pixels and get the distances between the pixels and their neighbors in the new positions
+    image = image.copy()
     temp = image.getpixel((x1, y1))
     image.putpixel((x1, y1), image.getpixel((x2, y2)))
     image.putpixel((x2, y2), temp)
@@ -59,7 +62,12 @@ def can_swap_pixels(image, x1, y1, x2, y2):
     # Return the difference in sums
     return sum_before - sum_after
 
-def simulated_annealing(image, init_temp=1000, alpha=0.01):
+def create_gif(images, duration):
+    gif_data = io.BytesIO()
+    print(f"Saving gif of length {len(images)} (might take a while).")
+    imageio.mimsave("anneal.gif", images, format='gif', duration=duration)
+
+def simulated_annealing(image, init_temp=10000, alpha=1e-6, duration=.01,num_frames=100):
     # Calculate the initial score
     # print("Calculate initial score")
     # score = sum([calculate_distance(image, x, y) for x in tqdm.tqdm(range(image.width)) for y in range(image.height)])
@@ -68,13 +76,16 @@ def simulated_annealing(image, init_temp=1000, alpha=0.01):
     temperature = init_temp
 
     # Set the number of iterations based on the size of the image (adjust this as needed)
-    iterations = int(image.width * image.height * 10)
+    iterations = int(image.width * image.height * 100)
     print(f"Running for {iterations}.")
 
     # Perform the simulated annealing algorithm
+    images = [image.copy()]
+    skips = 0
     for i in tqdm.tqdm(range(iterations)):
-        if i % int(iterations/25) == 0 and i > 0:
-            image.show()
+        if i % int(iterations/num_frames) == 0 and i > 0:
+            images.append(image.copy())
+            # image.show()
         # Get two random coordinates
         x1, y1 = get_random_coordinate(image)
         x2, y2 = get_random_coordinate(image)
@@ -97,9 +108,15 @@ def simulated_annealing(image, init_temp=1000, alpha=0.01):
                 image.putpixel((x1, y1), image.getpixel((x2, y2)))
                 image.putpixel((x2, y2), temp)
                 # score -= diff
+            else:
+                skips+=1
 
         # Decrease the temperature
         temperature *= (1 - alpha)
+    images.append(image.copy())
+
+    print(f"{skips}={skips/iterations}")
+    create_gif(images,duration)
 
     # Return the final image and score
     return image
