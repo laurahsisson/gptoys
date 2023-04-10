@@ -10,8 +10,9 @@ def get_random_coordinate(image, size):
     """
     Returns a random coordinate on the image.
     """
-    x = random.randint(size // 2, image.width - size // 2 - 1)
-    y = random.randint(size // 2, image.height - size // 2 - 1)
+    half_size = size // 2
+    x = random.randint(0, image.width - 0 - 1)
+    y = random.randint(0, image.height - 0 - 1)
     return x, y
 
 def get_square_coords(img,center_x, center_y, size):
@@ -30,28 +31,56 @@ def swap_pixels(img, x1, y1, x2, y2, square_size):
     image_array = np.array(img)
 
 # get the starting and ending coordinates of the squares to be swapped
-    x1_start, y1_start, x1_end, y1_end = get_square_coords(img,x1, y1, square_size)
-    x2_start, y2_start, x2_end, y2_end = get_square_coords(img,x2, y2, square_size)
+    print(x1,y1,x2,y2,(img.width,img.height))
+    x1_start = max(x1 - square_size // 2, 0)
+    y1_start = max(y1 - square_size // 2, 0)
+    x2_start = max(x2 - square_size // 2, 0)
+    y2_start = max(y2 - square_size // 2, 0)
+
+    x1_end = min(x1_start + square_size, image_array.shape[0])
+    y1_end = min(y1_start + square_size, image_array.shape[1])
+    x2_end = min(x2_start + square_size, image_array.shape[0])
+    y2_end = min(y2_start + square_size, image_array.shape[1])
     
+    square1 = image_array[x1_start:x1_end, y1_start:y1_end].copy()
+    square2 = image_array[x2_start:x2_end, y2_start:y2_end].copy()
+
+    if square1.shape != square2.shape:
+        # ensure both squares are the same size
+        max_shape = tuple(min(s) for s in zip(square1.shape,square2.shape))
+        square1_new = np.zeros(max_shape, dtype=square1.dtype)
+        square2_new = np.zeros(max_shape, dtype=square2.dtype)
+        square1_new[:, :, :] = square1[:max_shape[0], :max_shape[1], :max_shape[2]]
+        square2_new[:, :, :] = square2[:max_shape[0], :max_shape[1], :max_shape[2]]
+        square1 = square1_new
+        square2 = square2_new
+        x1_end = x1_start + square1.shape[0]
+        y1_end = y1_start + square1.shape[1]
+        x2_end = x2_start + square2.shape[0]
+        y2_end = y2_start + square2.shape[1]
+
+
+    assert square1.shape == square2.shape
     # swap the squares of pixels surrounding each center
-    temp = image_array[x1_start:x1_end, y1_start:y1_end].copy()
-    image_array[x1_start:x1_end, y1_start:y1_end] = image_array[x2_start:x2_end, y2_start:y2_end]
-    image_array[x2_start:x2_end, y2_start:y2_end] = temp
+    print(image_array[x1_start:x1_end, y1_start:y1_end].shape,square2[:square1.shape[0], :square1.shape[1], :square1.shape[2]].shape)
+    image_array[x1_start:x1_end, y1_start:y1_end] = square2[:square1.shape[0], :square1.shape[1], :square1.shape[2]]
+    print(image_array[x2_start:x2_end, y2_start:y2_end].shape,square1[:square2.shape[0], :square2.shape[1], :square2.shape[2]].shape)
+    image_array[x2_start:x2_end, y2_start:y2_end] = square1[:square2.shape[0], :square2.shape[1], :square2.shape[2]]
     
     # add a random flip or rotation
-    flip_or_rotate = random.randint(0, 4)
-    if flip_or_rotate == 0:  # flip horrizontally
-        image_array[x1_start:x1_end, y1_start:y1_end] = np.fliplr(image_array[x1_start:x1_end, y1_start:y1_end])
-        image_array[x2_start:x2_end, y2_start:y2_end] = np.fliplr(image_array[x2_start:x2_end, y2_start:y2_end])
-    if flip_or_rotate == 1:  # flip vertically
-        image_array[x1_start:x1_end, y1_start:y1_end] = np.flipud(image_array[x1_start:x1_end, y1_start:y1_end])
-        image_array[x2_start:x2_end, y2_start:y2_end] = np.flipud(image_array[x2_start:x2_end, y2_start:y2_end])
-    elif flip_or_rotate == 2:  # rotate 90 degrees clockwise
-        image_array[x1_start:x1_end, y1_start:y1_end] = np.rot90(image_array[x1_start:x1_end, y1_start:y1_end], k=-1)
-        image_array[x2_start:x2_end, y2_start:y2_end] = np.rot90(image_array[x2_start:x2_end, y2_start:y2_end], k=-1)
-    elif flip_or_rotate == 3:  # rotate 90 degrees anticlockwise
-        image_array[x1_start:x1_end, y1_start:y1_end] = np.rot90(image_array[x1_start:x1_end, y1_start:y1_end], k=1)
-        image_array[x2_start:x2_end, y2_start:y2_end] = np.rot90(image_array[x2_start:x2_end, y2_start:y2_end], k=1)
+    # flip_or_rotate = random.randint(0, 4)
+    # if flip_or_rotate == 0:  # flip horrizontally
+    #     image_array[x1_start:x1_end, y1_start:y1_end] = np.fliplr(image_array[x1_start:x1_end, y1_start:y1_end])
+    #     image_array[x2_start:x2_end, y2_start:y2_end] = np.fliplr(image_array[x2_start:x2_end, y2_start:y2_end])
+    # if flip_or_rotate == 1:  # flip vertically
+    #     image_array[x1_start:x1_end, y1_start:y1_end] = np.flipud(image_array[x1_start:x1_end, y1_start:y1_end])
+    #     image_array[x2_start:x2_end, y2_start:y2_end] = np.flipud(image_array[x2_start:x2_end, y2_start:y2_end])
+    # elif flip_or_rotate == 2:  # rotate 90 degrees clockwise
+    #     image_array[x1_start:x1_end, y1_start:y1_end] = np.rot90(image_array[x1_start:x1_end, y1_start:y1_end], k=-1)
+    #     image_array[x2_start:x2_end, y2_start:y2_end] = np.rot90(image_array[x2_start:x2_end, y2_start:y2_end], k=-1)
+    # elif flip_or_rotate == 3:  # rotate 90 degrees anticlockwise
+    #     image_array[x1_start:x1_end, y1_start:y1_end] = np.rot90(image_array[x1_start:x1_end, y1_start:y1_end], k=1)
+    #     image_array[x2_start:x2_end, y2_start:y2_end] = np.rot90(image_array[x2_start:x2_end, y2_start:y2_end], k=1)
     
     return Image.fromarray(image_array)
 
@@ -80,20 +109,20 @@ def simulated_annealing(image, init_temp=1000,alpha=0.01,min_square_size=32,max_
     for i in tqdm.tqdm(range(iterations)):
         # if i % display_freq == 0 and i > 0:
         #     current_state.show()
-        try:
-            # Get two random coordinates
-            square_size = random.randint(min_square_size, max_square_size)
-            x1, y1 = get_random_coordinate(image, square_size)
-            x2, y2 = get_random_coordinate(image, square_size)
-            print(x1,y1,x2,y2)
+        # try:
+        # Get two random coordinates
+        square_size = random.randint(min_square_size, max_square_size)
+        x1, y1 = get_random_coordinate(image, square_size)
+        x2, y2 = get_random_coordinate(image, square_size)
+        print(x1,y1,x2,y2)
 
-            current_state = swap_pixels(current_state, x1, y1, x2, y2, square_size)
-            images.append(current_state.copy())
-        except IndexError:
-            continue
-        except ValueError:
-            print("F")
-            continue
+        current_state = swap_pixels(current_state, x1, y1, x2, y2, square_size)
+        images.append(current_state.copy())
+        # except IndexError:
+        #     continue
+        # except ValueError:
+        #     print("F")
+        #     continue
 
         # Lower the temperature
         temperature *= (1 - alpha)
