@@ -6,6 +6,9 @@ import numpy as np
 import io
 import imageio
 
+INPATH = "lauraphoto.jpg"
+OUTPATH = "me.mp4"
+
 def get_random_coordinate(image, size):
     """
     Returns a random coordinate on the image.
@@ -57,47 +60,39 @@ def swap_pixels(img, x1, y1, x2, y2, square_size):
 
 def create_gif(images, duration):
     gif_data = io.BytesIO()
-    print("Saving gif (might take a while).")
-    imageio.mimsave("me.gif", images, format='gif', duration=duration)
+    print("Saving mp4 (might take a while).")
+    writer = imageio.get_writer(OUTPATH, fps=1/duration)
+    for im in images:
+        writer.append_data(np.array(im))
+    writer.close()
 
-def simulated_annealing(image, init_temp=1000,alpha=0.01,min_square_size=32,max_square_size=256, duration=.1):
+def simulated_annealing(image, min_square_size=32,max_square_size=256, duration=.1):
     image.convert("RGB")
     new_width  = 1024
     new_height = new_width * image.height // image.width 
     image = ImageOps.fit(image, (new_width, new_height), Image.ANTIALIAS)
-    image_array = np.array(image)
     
-    # Set the initial state and temperature
     current_state = image.copy()
-    # current_score = sum(calculate_distance(current_state, i, j) for i in range(current_state.width) for j in range(current_state.height))
-    temperature = init_temp
     
     # Iterate the algorithm for the specified number of iterations
     iterations = 50
-    # display_freq = 100#int(iterations/100)
-    # print(f"Displaying every {display_freq}.")
     images = [image.copy()]
     print(f"Running for {iterations} steps.")
     f = 0
     for i in tqdm.tqdm(range(iterations)):
-        # if i % display_freq == 0 and i > 0:
-        #     current_state.show()
         square_size = random.randint(min_square_size, max_square_size)
         x1, y1 = get_random_coordinate(image, square_size)
         x2, y2 = get_random_coordinate(image, square_size)
         current_state = swap_pixels(current_state, x1, y1, x2, y2, square_size)
 
         images.append(current_state.copy())
-        # Lower the temperature
-        temperature *= (1 - alpha)
 
     print(f"Skipped {f} steps.")
     create_gif(images,duration)
 
     return current_state
 
-image_path = "lauraphoto.jpg"
-img = Image.open(image_path)
+img = Image.open(INPATH)
 simulated_annealing(img)
 # img.show()
 # img2 = 
