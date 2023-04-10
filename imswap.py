@@ -10,7 +10,7 @@ def calculate_distance(image, x, y):
     center_pixel = image.getpixel((x, y))
 
     # Define the neighborhood size (adjust this as needed)
-    neighborhood_size = 2
+    neighborhood_size = 6
 
     # Define the boundaries of the neighborhood
     left = max(0, x - neighborhood_size)
@@ -48,12 +48,14 @@ def can_swap_pixels(image, x1, y1, x2, y2):
     distance2 = calculate_distance(image, x2, y2)
 
     # Swap the pixels and get the distances between the pixels and their neighbors in the new positions
-    image = image.copy()
-    temp = image.getpixel((x1, y1))
-    image.putpixel((x1, y1), image.getpixel((x2, y2)))
-    image.putpixel((x2, y2), temp)
+    t1 = image.getpixel((x1, y1))
+    t2 = image.getpixel((x2, y2))
+    image.putpixel((x1, y1), t2)
+    image.putpixel((x2, y2), t1)
     new_distance1 = calculate_distance(image, x1, y1)
     new_distance2 = calculate_distance(image, x2, y2)
+    image.putpixel((x1, y1), t1)
+    image.putpixel((x2, y2), t2)
 
     # Calculate the sum of distances before and after swapping the pixels
     sum_before = distance1 + distance2
@@ -67,7 +69,7 @@ def create_gif(images, duration):
     print(f"Saving gif of length {len(images)} (might take a while).")
     imageio.mimsave("anneal.gif", images, format='gif', duration=duration)
 
-def simulated_annealing(image, init_temp=10000, alpha=1e-6, duration=.01,num_frames=100):
+def simulated_annealing(image, init_temp=10000, alpha=1e-3, duration=.01,num_frames=100):
     # Calculate the initial score
     # print("Calculate initial score")
     # score = sum([calculate_distance(image, x, y) for x in tqdm.tqdm(range(image.width)) for y in range(image.height)])
@@ -76,7 +78,7 @@ def simulated_annealing(image, init_temp=10000, alpha=1e-6, duration=.01,num_fra
     temperature = init_temp
 
     # Set the number of iterations based on the size of the image (adjust this as needed)
-    iterations = int(image.width * image.height * 100)
+    iterations = int(image.width * image.height * 300)
     print(f"Running for {iterations}.")
 
     # Perform the simulated annealing algorithm
