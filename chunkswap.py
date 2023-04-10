@@ -11,8 +11,8 @@ def get_random_coordinate(image, size):
     Returns a random coordinate on the image.
     """
     half_size = size // 2
-    x = random.randint(0, image.width - 0 - 1)
-    y = random.randint(0, image.height - 0 - 1)
+    x = random.randint(half_size, image.width - half_size - 1)
+    y = random.randint(half_size, image.height - half_size - 1)
     return x, y
 
 def get_square_coords(img,center_x, center_y, size):
