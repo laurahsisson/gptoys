@@ -66,7 +66,7 @@ def create_gif(images, duration):
         writer.append_data(np.array(im))
     writer.close()
 
-def simulated_annealing(image, min_square_size=32,max_square_size=256, duration=.1):
+def simulated_annealing(image, min_square_size=64,max_square_size=512, duration=.2):
     image.convert("RGB")
     new_width  = 1024
     new_height = new_width * image.height // image.width 
@@ -75,7 +75,7 @@ def simulated_annealing(image, min_square_size=32,max_square_size=256, duration=
     current_state = image.copy()
     
     # Iterate the algorithm for the specified number of iterations
-    iterations = 50
+    iterations = 30
     images = [image.copy()]
     print(f"Running for {iterations} steps.")
     f = 0
