@@ -14,7 +14,9 @@ messages = [
     {"role": "assistant", "content": "If you are looking to make money, the lima bean market has opportunities for arbitrage."},
 ]
 
-print("Hello, I am lima-gpt!")
+intro = "lima-gpt: "
+
+print(intro+"Hello, I am lima-gpt!")
 while True:
     user = input("Response:\n")
     messages += [{"role": "user", "content": user}]
@@ -23,6 +25,6 @@ while True:
       messages=messages
     )
     response = chat["choices"][0]["message"]
-    print(response["content"])
+    print(intro+response["content"])
     messages += response
 
